@@ -2,6 +2,7 @@ package com.leonardobishop.quests.common.player.questprogressfile;
 
 import com.leonardobishop.quests.common.player.QPlayer;
 import com.leonardobishop.quests.common.plugin.Quests;
+import com.leonardobishop.quests.common.quest.Category;
 import com.leonardobishop.quests.common.quest.Quest;
 import com.leonardobishop.quests.common.quest.Task;
 
@@ -174,14 +175,33 @@ public class QuestProgressFile {
     //TODO possibly move this
     public boolean hasMetRequirements(Quest quest) {
         for (String id : quest.getRequirements()) {
-            Quest q = plugin.getQuestManager().getQuestById(id);
-            if (q == null) {
-                continue;
+            List<String> questIds = new ArrayList<>();
+
+            if (id.startsWith("c:")) {
+                String categoryId = id.substring(2);
+                Category category = plugin.getQuestManager().getCategoryById(categoryId);
+                if (category == null) {
+                    continue;
+                }
+
+                for (String questId : category.getRegisteredQuestIds()) {
+                    questIds.add(questId);
+                }
             }
-            if (hasQuestProgress(q) && !getQuestProgress(q).isCompletedBefore()) {
-                return false;
-            } else if (!hasQuestProgress(q)) {
-                return false;
+            else {
+                questIds.add(id);
+            }
+
+            for (String questId : questIds) {
+                Quest q = plugin.getQuestManager().getQuestById(questId);
+                if (q == null) {
+                    continue;
+                }
+                if (hasQuestProgress(q) && !getQuestProgress(q).isCompletedBefore()) {
+                    return false;
+                } else if (!hasQuestProgress(q)) {
+                    return false;
+                }
             }
         }
         return true;
